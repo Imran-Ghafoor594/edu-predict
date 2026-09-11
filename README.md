@@ -1,4 +1,4 @@
-# EduPredict — AI Student Performance Portal
+# EduPredict —  Student Performance Portal
 
 A full-stack web application which uses **Database Systems** 
 for students record saving
