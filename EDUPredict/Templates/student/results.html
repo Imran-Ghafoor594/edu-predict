@@ -1,0 +1,83 @@
+{% extends "student/base.html" %}
+{% block title %}My Results — Student{% endblock %}
+{% block page_title %}My <span>Results</span>{% endblock %}
+
+{% block content %}
+<div class="fade-up">
+  <!-- CGPA Card -->
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:18px;margin-bottom:24px;">
+    <div class="card" style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+      <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">Current CGPA</div>
+      <div style="font-family:'Syne',sans-serif;font-size:3.5rem;font-weight:800;
+           color:{% if cgpa>=3.5 %}var(--accent){% elif cgpa>=2.5 %}var(--accent2){% elif cgpa>=1.5 %}var(--warn){% else %}var(--danger){% endif %};">
+        {{ cgpa }}
+      </div>
+      <span class="badge badge-{% if cgpa>=3.5 %}green{% elif cgpa>=2.5 %}blue{% elif cgpa>=1.5 %}yellow{% else %}red{% endif %}" style="font-size:.78rem;padding:4px 14px;">
+        {% if cgpa>=3.5 %}Excellent{% elif cgpa>=2.5 %}Good{% elif cgpa>=1.5 %}Average{% elif cgpa>0 %}At Risk{% else %}No Results Yet{% endif %}
+      </span>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Grade Summary</span></div>
+      {% if results %}
+        {% set grade_map = {'A+':4.0,'A':4.0,'A-':3.7,'B+':3.3,'B':3.0,'B-':2.7,'C+':2.3,'C':2.0,'D':1.0,'F':0.0} %}
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          {% for r in results %}
+          {% set gc = 'green' if r.grade and r.grade[0]=='A' else 'blue' if r.grade and r.grade[0]=='B' else 'yellow' if r.grade and r.grade[0]=='C' else 'red' %}
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;font-size:.82rem;">{{ r.course_name }}</div>
+            <div style="font-size:.72rem;color:var(--muted);">{{ r.credit_hrs }} Cr</div>
+            <span class="badge badge-{{ gc }}">{{ r.grade }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="color:var(--muted);font-size:.855rem;">Koi result publish nahi hua abhi tak.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Detailed Results Table -->
+  <div class="card fade-up delay-1">
+    <div class="card-header">
+      <span class="card-title">Detailed Results</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Course</th><th>Code</th><th>Assignment</th><th>Midterm</th><th>Final</th><th>Grade</th></tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+          {% set gc = 'green' if r.grade and r.grade[0]=='A' else 'blue' if r.grade and r.grade[0]=='B' else 'yellow' if r.grade and r.grade[0]=='C' else 'red' %}
+          <tr>
+            <td style="font-weight:500;">{{ r.course_name }}</td>
+            <td style="font-family:monospace;font-size:.8rem;color:var(--accent);">{{ r.code }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:7px;">
+                <div style="width:50px;height:4px;background:var(--border);border-radius:99px;">
+                  <div style="width:{{ r.assignment_score }}%;height:100%;background:var(--accent);border-radius:99px;"></div>
+                </div>
+                {{ r.assignment_score }}%
+              </div>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:7px;">
+                <div style="width:50px;height:4px;background:var(--border);border-radius:99px;">
+                  <div style="width:{{ r.midterm_score }}%;height:100%;background:var(--accent2);border-radius:99px;"></div>
+                </div>
+                {{ r.midterm_score }}%
+              </div>
+            </td>
+            <td style="font-weight:600;">{{ r.final_score }}%</td>
+            <td><span class="badge badge-{{ gc }}" style="font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;">{{ r.grade }}</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Koi result publish nahi hua abhi tak.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

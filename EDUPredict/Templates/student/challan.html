@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Fee Challan — Semester {{ fee.semester }}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Oxanium:wght@700;800&display=swap');
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'DM Sans',sans-serif; background:#f4f6fb; color:#1a1a2e; padding:30px; }
+  .page{ max-width:760px; margin:0 auto; }
+  .challan-box{ background:#fff; border:2px solid #1a1a2e; border-radius:12px; overflow:hidden; margin-bottom:24px; }
+  .challan-header{ background:#1a1a2e; color:#fff; padding:18px 24px; display:flex; justify-content:space-between; align-items:center; }
+  .challan-header .uni{ font-family:'Oxanium',sans-serif; font-size:1.1rem; font-weight:800; }
+  .challan-header .sem{ font-size:.85rem; opacity:.75; }
+  .challan-body{ padding:20px 24px; }
+  .info-row{ display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap; }
+  .info-item{ flex:1; min-width:160px; }
+  .info-label{ font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#777; margin-bottom:3px; }
+  .info-value{ font-size:.9rem; font-weight:600; }
+  hr{ border:none; border-top:1px dashed #ccc; margin:14px 0; }
+  table{ width:100%; border-collapse:collapse; font-size:.875rem; }
+  table th{ text-align:left; padding:7px 10px; background:#f0f2f8; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; }
+  table td{ padding:8px 10px; border-bottom:1px solid #eee; }
+  .total-row td{ font-weight:700; font-size:.95rem; background:#e8faf5; color:#006d57; }
+  .status-badge{ display:inline-block; padding:3px 12px; border-radius:20px; font-size:.75rem; font-weight:700; }
+  .status-paid   { background:#e8faf5; color:#006d57; }
+  .status-partial{ background:#fff7e6; color:#b45309; }
+  .status-unpaid { background:#fef0f0; color:#c0392b; }
+  .challan-footer{ padding:14px 24px; background:#f8f9fc; border-top:1px solid #eee; font-size:.75rem; color:#888; display:flex; justify-content:space-between; }
+  .inst-table th{ background:#eff1f8; }
+  .print-btn{ display:block; text-align:center; margin:20px auto; }
+  .copy-label{ text-align:center; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:#aaa; margin-bottom:6px; }
+  @media print{
+    body{ background:#fff; padding:10px; }
+    .no-print{ display:none; }
+    .challan-box{ box-shadow:none; margin-bottom:16px; }
+    .page-break{ page-break-before:always; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="no-print" style="text-align:center;margin-bottom:20px;">
+    <button onclick="window.print()" style="padding:10px 28px;background:#1a1a2e;color:#fff;border:none;border-radius:8px;font-size:.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
+      🖨️ Print / Save as PDF
+    </button>
+    <a href="/student/fee" style="margin-left:14px;color:#555;font-size:.85rem;text-decoration:none;">← Back to Fee</a>
+  </div>
+
+  <!-- STUDENT COPY -->
+  <div class="copy-label">Student Copy</div>
+  <div class="challan-box">
+    <div class="challan-header">
+      <div><div class="uni">EduPredict University</div><div class="sem">Fee Payment Challan — Semester {{ fee.semester }}</div></div>
+      <div style="text-align:right;">
+        <div style="font-size:.78rem;opacity:.7;">Status</div>
+        <span class="status-badge status-{{ fee.status|lower }}">{{ fee.status }}</span>
+      </div>
+    </div>
+    <div class="challan-body">
+      <div class="info-row">
+        <div class="info-item"><div class="info-label">Student Name</div><div class="info-value">{{ student.name if student else '—' }}</div></div>
+        <div class="info-item"><div class="info-label">Roll Number</div><div class="info-value" style="font-family:monospace;">{{ student.roll_no if student else '—' }}</div></div>
+        <div class="info-item"><div class="info-label">Academic Year</div><div class="info-value">{{ fee.academic_year or '—' }}</div></div>
+        <div class="info-item"><div class="info-label">Due Date</div><div class="info-value" style="color:#c0392b;">{{ fee.due_date or '—' }}</div></div>
+      </div>
+      <hr/>
+      <table>
+        <thead><tr><th>Description</th><th style="text-align:right;">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Tuition Fee ({{ fee.total_credit_hours }} credit hrs)</td><td style="text-align:right;">Rs. {{ "{:,.0f}".format(fee.tuition_fee) }}</td></tr>
+          <tr><td>Registration Fee</td><td style="text-align:right;">Rs. {{ "{:,.0f}".format(fee.registration_fee) }}</td></tr>
+          <tr><td>Exam Fee</td><td style="text-align:right;">Rs. {{ "{:,.0f}".format(fee.exam_fee) }}</td></tr>
+          <tr><td>Other Charges</td><td style="text-align:right;">Rs. {{ "{:,.0f}".format(fee.other_charges) }}</td></tr>
+          <tr class="total-row"><td>Total Amount</td><td style="text-align:right;">Rs. {{ "{:,.0f}".format(fee.total_amount) }}</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:.85rem;">
+        <span style="color:green;font-weight:600;">Paid: Rs. {{ "{:,.0f}".format(fee.paid_amount) }}</span>
+        <span style="color:{% if fee.remaining_amount > 0 %}#c0392b{% else %}green{% endif %};font-weight:600;">Remaining: Rs. {{ "{:,.0f}".format(fee.remaining_amount or 0) }}</span>
+      </div>
+
+      {% if installments %}
+      <hr/>
+      <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#777;margin-bottom:8px;">Installment Plan</div>
+      <table class="inst-table">
+        <thead><tr><th>#</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Paid On</th></tr></thead>
+        <tbody>
+          {% for inst in installments %}
+          <tr>
+            <td>{{ inst.installment_no }}</td>
+            <td>Rs. {{ "{:,.0f}".format(inst.amount) }}</td>
+            <td>{{ inst.due_date }}</td>
+            <td><span class="status-badge status-{{ inst.status|lower }}">{{ inst.status }}</span></td>
+            <td style="color:#555;font-size:.8rem;">{{ inst.payment_date or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+    <div class="challan-footer">
+      <span>Generated: {{ fee.generated_at if fee.generated_at else 'N/A' }}</span>
+      <span>Challan ID: #{{ fee.id }}</span>
+    </div>
+  </div>
+
+  <!-- BANK COPY -->
+  <div class="copy-label page-break">Bank / Office Copy</div>
+  <div class="challan-box">
+    <div class="challan-header">
+      <div><div class="uni">EduPredict University</div><div class="sem">Fee Payment Challan — Semester {{ fee.semester }} (Bank Copy)</div></div>
+      <span class="status-badge status-{{ fee.status|lower }}">{{ fee.status }}</span>
+    </div>
+    <div class="challan-body">
+      <div class="info-row">
+        <div class="info-item"><div class="info-label">Student Name</div><div class="info-value">{{ student.name if student else '—' }}</div></div>
+        <div class="info-item"><div class="info-label">Roll Number</div><div class="info-value" style="font-family:monospace;">{{ student.roll_no if student else '—' }}</div></div>
+        <div class="info-item"><div class="info-label">Total Amount</div><div class="info-value" style="font-size:1.1rem;color:#006d57;">Rs. {{ "{:,.0f}".format(fee.total_amount) }}</div></div>
+        <div class="info-item"><div class="info-label">Due Date</div><div class="info-value" style="color:#c0392b;">{{ fee.due_date or '—' }}</div></div>
+      </div>
+      <hr/>
+      <div style="display:flex;gap:40px;margin-top:10px;">
+        <div style="flex:1;"><div class="info-label">Bank Stamp / Signature</div><div style="height:60px;border-bottom:1px solid #ccc;margin-top:10px;"></div></div>
+        <div style="flex:1;"><div class="info-label">Amount Received (Rs.)</div><div style="height:60px;border-bottom:1px solid #ccc;margin-top:10px;"></div></div>
+        <div style="flex:1;"><div class="info-label">Date</div><div style="height:60px;border-bottom:1px solid #ccc;margin-top:10px;"></div></div>
+      </div>
+    </div>
+    <div class="challan-footer">
+      <span>Challan ID: #{{ fee.id }}</span>
+      <span>EduPredict University — Finance Office</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard — Admin{% endblock %}
+{% block page_title %}<span>Admin</span> Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid fade-up">
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-users"></i></div>
+    <div class="stat-value">{{ stats.total_students }}</div>
+    <div class="stat-label">Total Students</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-book-open"></i></div>
+    <div class="stat-value">{{ stats.total_courses }}</div>
+    <div class="stat-label">Total Courses</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon yellow"><i class="fas fa-file-circle-check"></i></div>
+    <div class="stat-value">{{ stats.published_results }}</div>
+    <div class="stat-label">Published Results</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon red"><i class="fas fa-triangle-exclamation"></i></div>
+    <div class="stat-value">{{ stats.failed_students }}</div>
+    <div class="stat-label">Failed Students</div>
+  </div>
+</div>
+
+<div class="grid-2 fade-up delay-1">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Quick Actions</span>
+    </div>
+    {% set actions = [
+      ('/admin/students','fa-users','Add Student','Naye student ka account banao'),
+      ('/admin/courses','fa-book-open','Add Course','Naya course add karo'),
+      ('/admin/marks','fa-file-pen','Add Marks','Student ka result enter karo'),
+      
+    ] %}
+    {% for link, icon, title, desc in actions %}
+    <a href="{{ link }}" style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:10px;text-decoration:none;color:var(--text);transition:background .2s;margin-bottom:6px;" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
+      <div class="stat-icon green" style="margin:0;flex-shrink:0;"><i class="fas {{ icon }}"></i></div>
+      <div>
+        <div style="font-size:.875rem;font-weight:600;">{{ title }}</div>
+        <div style="font-size:.75rem;color:var(--muted);">{{ desc }}</div>
+      </div>
+      <i class="fas fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.75rem;"></i>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">System Info</span>
+    </div>
+    {% set info = [
+      ('fa-database','Database','MySQL Connected','green'),
+      ('fa-shield-halved','Role','Administrator','blue'),
+    ] %}
+    {% for icon, label, val, color in info %}
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(31,45,69,.5);">
+      <div class="stat-icon {{ color }}" style="margin:0;width:30px;height:30px;font-size:.75rem;flex-shrink:0;">
+        <i class="fas {{ icon }}"></i>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:.8rem;color:var(--muted);">{{ label }}</div>
+        <div style="font-size:.855rem;font-weight:500;">{{ val }}</div>
+      </div>
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);"></span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
