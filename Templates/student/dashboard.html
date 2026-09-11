@@ -1,0 +1,91 @@
+{% extends "student/base.html" %}
+{% block title %}Dashboard — Student{% endblock %}
+{% block page_title %}My <span>Dashboard</span>{% endblock %}
+
+{% block content %}
+<div class="stats-grid fade-up">
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-book-open"></i></div>
+    <div class="stat-value">{{ enrolled|length }}</div>
+    <div class="stat-label">Enrolled Courses</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-chart-line"></i></div>
+    <div class="stat-value">{{ cgpa }}</div>
+    <div class="stat-label">Current CGPA</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon yellow"><i class="fas fa-file-alt"></i></div>
+    <div class="stat-value">{{ results|length }}</div>
+    <div class="stat-label">Results Published</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {% if cgpa >= 3.5 %}green{% elif cgpa >= 2.5 %}blue{% elif cgpa >= 1.5 %}yellow{% else %}red{% endif %}">
+      <i class="fas fa-trophy"></i>
+    </div>
+    <div class="stat-value" style="font-size:1.1rem;">
+      {% if cgpa >= 3.5 %}Excellent{% elif cgpa >= 2.5 %}Good{% elif cgpa >= 1.5 %}Average{% elif cgpa > 0 %}At Risk{% else %}N/A{% endif %}
+    </div>
+    <div class="stat-label">Performance</div>
+  </div>
+</div>
+
+<div class="grid-2 fade-up delay-1">
+  <!-- Enrolled Courses -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">My Courses</span>
+      <a href="/student/enroll" class="btn btn-outline btn-sm">Manage</a>
+    </div>
+    {% if enrolled %}
+      {% for c in enrolled %}
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(31,45,69,.5);">
+        <div class="stat-icon blue" style="margin:0;width:32px;height:32px;font-size:.72rem;flex-shrink:0;">
+          <i class="fas fa-book"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:.855rem;font-weight:500;">{{ c.name }}</div>
+          <div style="font-size:.72rem;color:var(--muted);">{{ c.code }} • {{ c.credit_hrs }} Cr Hrs • {{ c.instructor or 'TBA' }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:20px;color:var(--muted);font-size:.855rem;">
+        Koi course enrolled nahi — <a href="/student/enroll" style="color:var(--accent);">Enroll karo!</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Recent Results -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Results</span>
+      <a href="/student/results" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    {% if results %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Course</th><th>Grade</th><th>Final</th></tr></thead>
+          <tbody>
+            {% for r in results[:5] %}
+            {% set gc = 'green' if r.grade and r.grade[0]=='A' else 'blue' if r.grade and r.grade[0]=='B' else 'yellow' if r.grade and r.grade[0]=='C' else 'red' %}
+            <tr>
+              <td>
+                <div style="font-size:.82rem;font-weight:500;">{{ r.course_name }}</div>
+                <div style="font-size:.7rem;color:var(--accent);">{{ r.code }}</div>
+              </td>
+              <td><span class="badge badge-{{ gc }}">{{ r.grade }}</span></td>
+              <td style="font-weight:600;">{{ r.final_score }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align:center;padding:20px;color:var(--muted);font-size:.855rem;">
+        Koi result publish nahi hua abhi tak.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

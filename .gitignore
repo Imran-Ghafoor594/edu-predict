@@ -1,0 +1,10 @@
+
+student_data.csv
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.vscode/
+.env/

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduPredict — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; min-height:100vh; overflow-y:auto; color:#fff; }
+
+    .bg { position:fixed; inset:0; z-index:-2; background-image:url('/static/rip.jpg'); background-size:cover; background-position:center; }
+    .bg-overlay { position:fixed; inset:0; z-index:-1; background:rgba(0,0,0,0.55); backdrop-filter:blur(2px); }
+    .bg-glow {
+      position:fixed; inset:0; z-index:-1;
+      background:
+        radial-gradient(ellipse 50% 40% at 15% 85%, rgba(0,180,255,0.2) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 35% at 85% 75%, rgba(0,212,170,0.15) 0%, transparent 50%);
+    }
+
+    .page-wrap { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 20px; }
+
+    .login-container { width:100%; max-width:420px; animation:fadeUp 0.6s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+    .logo-section { text-align:center; margin-bottom:24px; }
+    .logo-icon {
+      width:68px; height:68px; border-radius:18px; margin:0 auto 12px;
+      background:linear-gradient(135deg,#00d4aa,#3b82f6);
+      display:grid; place-items:center; font-size:1.8rem;
+      box-shadow:0 6px 30px rgba(0,212,170,0.5), 0 0 0 1px rgba(255,255,255,0.15);
+      animation:glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%,100%{box-shadow:0 6px 30px rgba(0,212,170,0.5),0 0 0 1px rgba(255,255,255,0.15)}
+      50%{box-shadow:0 6px 45px rgba(0,212,170,0.8),0 0 0 1px rgba(255,255,255,0.25)}
+    }
+    .logo-title { font-family:'Oxanium',sans-serif; font-size:2.2rem; font-weight:800; letter-spacing:-1px; }
+    .logo-title .edu { color:#00d4aa; text-shadow:0 0 20px rgba(0,212,170,0.6); }
+    .logo-title .predict { color:#fff; }
+    .logo-sub { font-size:.72rem; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:.15em; margin-top:5px; }
+
+    .glass-card {
+      background:rgba(10,20,50,0.55);
+      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,0.2); border-radius:22px; padding:32px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.05);
+    }
+    .card-title { font-family:'Oxanium',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:4px; }
+    .card-sub { font-size:.8rem; color:rgba(255,255,255,0.5); margin-bottom:22px; }
+
+    .role-tabs { display:flex; gap:6px; margin-bottom:20px; background:rgba(0,0,0,0.3); border-radius:12px; padding:4px; }
+    .role-tab {
+      flex:1; padding:9px; border-radius:9px; border:none;
+      font-family:'DM Sans',sans-serif; font-size:.84rem; font-weight:500;
+      cursor:pointer; transition:all .25s; color:rgba(255,255,255,0.4); background:transparent;
+      display:flex; align-items:center; justify-content:center; gap:7px;
+    }
+    .role-tab.active { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); color:#fff; }
+    .role-tab.active i { color:#00d4aa; }
+
+    .form-group { margin-bottom:15px; }
+    label { display:block; font-size:.71rem; color:rgba(255,255,255,0.5); margin-bottom:6px; text-transform:uppercase; letter-spacing:.06em; }
+    .input-wrap { position:relative; }
+    .input-wrap i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.3); font-size:.82rem; }
+    input {
+      width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18);
+      border-radius:11px; padding:11px 14px 11px 38px; color:#fff;
+      font-family:'DM Sans',sans-serif; font-size:.875rem; outline:none; transition:all .25s;
+    }
+    input::placeholder { color:rgba(255,255,255,0.25); }
+    input:focus { border-color:#00d4aa; background:rgba(0,212,170,0.1); box-shadow:0 0 0 3px rgba(0,212,170,0.2); }
+
+    .btn-login {
+      width:100%; padding:13px; border:none; border-radius:11px;
+      background:linear-gradient(135deg,#00d4aa,#00b894); color:#000;
+      font-family:'Oxanium',sans-serif; font-size:.95rem; font-weight:700;
+      cursor:pointer; margin-top:6px; transition:all .25s;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      box-shadow:0 4px 20px rgba(0,212,170,0.5);
+    }
+    .btn-login:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,212,170,0.7); }
+
+    .flash { padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:.82rem; display:flex; align-items:center; gap:9px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.35); color:#fca5a5; }
+
+    .announce-box { margin-top:18px; padding:15px 16px; background:rgba(0,212,170,0.1); border:1px solid rgba(0,212,170,0.25); border-radius:14px; }
+    .announce-label { font-size:.65rem; color:#00d4aa; text-transform:uppercase; letter-spacing:.1em; font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+    .announce-box p { font-size:.8rem; color:rgba(255,255,255,0.7); line-height:1.65; }
+    .announce-box strong { color:#00d4aa; }
+
+    .footer-text { text-align:center; margin-top:20px; font-size:.7rem; color:rgba(255,255,255,0.3); }
+  </style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="bg-overlay"></div>
+<div class="bg-glow"></div>
+
+<div class="page-wrap">
+  <div class="login-container">
+    <div class="logo-section">
+      <div class="logo-icon">🎓</div>
+      <div class="logo-title"><span class="edu">Edu</span><span class="predict">Predict</span></div>
+      <div class="logo-sub">AI Student Performance Portal</div>
+    </div>
+
+    <div class="glass-card">
+      <div class="card-title">Welcome Back</div>
+      <div class="card-sub">Apne account mein login karein</div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="flash"><i class="fas fa-exclamation-circle"></i> {{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <div class="role-tabs">
+        <button class="role-tab active" id="adminTab" onclick="setRole('admin')">
+          <i class="fas fa-shield-halved"></i> Admin
+        </button>
+        <button class="role-tab" id="studentTab" onclick="setRole('student')">
+          <i class="fas fa-user-graduate"></i> Student
+        </button>
+      </div>
+
+      <form method="POST" action="/">
+        <input type="hidden" name="role_hint" id="roleHint" value="admin"/>
+        <div class="form-group">
+          <label>Username</label>
+          <div class="input-wrap">
+            <i class="fas fa-user"></i>
+            <input type="text" name="username" id="usernameInput" placeholder="Enter username" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" name="password" placeholder="Enter password" required/>
+          </div>
+        </div>
+        <button type="submit" class="btn-login">
+          <i class="fas fa-right-to-bracket"></i> Login
+        </button>
+      </form>
+
+      <div class="announce-box">
+        <div class="announce-label"><i class="fas fa-bullhorn"></i> Announcement</div>
+        <p>
+          Students who wish to access the portal must contact the
+          <strong>University Admin</strong> to get their account created.
+          Once your account is ready, you will receive your
+          <strong>username</strong> and <strong>password</strong> to login here.
+        </p>
+      </div>
+    </div>
+
+    <div class="footer-text">© 2026 EduPredict — AI Powered Education Portal</div>
+  </div>
+</div>
+
+<script>
+  function setRole(role) {
+    document.getElementById('roleHint').value = role;
+    document.getElementById('adminTab').classList.toggle('active', role==='admin');
+    document.getElementById('studentTab').classList.toggle('active', role==='student');
+    document.getElementById('usernameInput').placeholder = role==='admin' ? 'Admin username' : 'Student username';
+  }
+</script>
+<script src="{{ url_for('static', filename='js/idle_clock.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+{% extends "admin/base.html" %}
+{% block title %}Marks — Admin{% endblock %}
+{% block page_title %}Manage <span>Marks</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+  .grade-badge{ display:inline-block; padding:3px 10px; border-radius:6px; font-family:'Syne',sans-serif; font-size:.78rem; font-weight:700; }
+  .gA{ background:rgba(0,212,170,.15); color:var(--accent); }
+  .gB{ background:rgba(59,130,246,.15); color:var(--accent2); }
+  .gC{ background:rgba(245,158,11,.15); color:var(--warn); }
+  .gD,.gF{ background:rgba(239,68,68,.12); color:var(--danger); }
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(4px); z-index:999; align-items:center; justify-content:center; }
+  .modal-overlay.open{ display:flex; }
+  .modal{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px; width:100%; max-width:500px; animation:fadeUp .3s ease; }
+  .modal-title{ font-family:'Syne',sans-serif; font-size:1.05rem; font-weight:700; margin-bottom:20px; }
+  .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fade-up">
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:20px;">
+    <a href="/admin/marks/publish/all" class="btn btn-success"
+       onclick="return confirm('Sare results publish karo?')">
+      <i class="fas fa-bullhorn"></i> Publish All Results
+    </a>
+    <button class="btn btn-primary" onclick="openModal()">
+      <i class="fas fa-plus"></i> Add Marks
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">All Results</span>
+      <span style="font-size:.75rem;color:var(--muted);">{{ results|length }} records</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Student</th><th>Course</th><th>Assignment</th><th>Midterm</th><th>Final</th><th>Grade</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+          {% set gc = 'A' if r.grade and r.grade[0]=='A' else 'B' if r.grade and r.grade[0]=='B' else 'C' if r.grade and r.grade[0]=='C' else 'D' %}
+          <tr>
+            <td>
+              <div style="font-weight:500;">{{ r.student_name }}</div>
+              <div style="font-size:.72rem;color:var(--muted);">{{ r.roll_no }}</div>
+            </td>
+            <td>
+              <div style="font-size:.82rem;">{{ r.course_name }}</div>
+              <div style="font-size:.7rem;color:var(--accent);">{{ r.code }}</div>
+            </td>
+            <td>{{ r.assignment_score }}%</td>
+            <td>{{ r.midterm_score }}%</td>
+            <td>{{ r.final_score }}%</td>
+            <td><span class="grade-badge g{{ gc }}">{{ r.grade }}</span></td>
+            <td>
+              {% if r.is_published %}
+                <span class="badge badge-green">Published</span>
+              {% else %}
+                <span class="badge badge-yellow">Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if not r.is_published %}
+              <a href="/admin/marks/publish/{{ r.id }}" class="btn btn-success btn-sm">
+                <i class="fas fa-check"></i> Publish
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px;">Koi result nahi — Add karo!</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title"><i class="fas fa-file-pen" style="color:var(--accent);margin-right:8px;"></i>Add Student Marks</div>
+    <form method="POST" action="/admin/marks/add">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Student</label>
+          <select name="student_id" required>
+            <option value="">Select Student</option>
+            {% for s in students %}
+            <option value="{{ s.id }}">{{ s.name }} ({{ s.roll_no }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Course</label>
+          <select name="course_id" required>
+            <option value="">Select Course</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.code }} — {{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Assignment</label>
+          <input type="number" name="assignment_score" min="0" max="100" placeholder="85" required/>
+        </div>
+        <div class="form-group">
+          <label>Midterm</label>
+          <input type="number" name="midterm_score" min="0" max="100" placeholder="78" required/>
+        </div>
+        <div class="form-group">
+          <label>Final</label>
+          <input type="number" name="final_score" min="0" max="100" placeholder="80" required/>
+        </div>
+      </div>
+      <div style="padding:10px 14px;background:var(--surface);border-radius:8px;font-size:.78rem;color:var(--muted);">
+        <i class="fas fa-info-circle" style="color:var(--accent);"></i>
+        Grade auto-calculate: Assignment 20% + Midterm 30% + Final 50%
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Marks</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+  function closeModal(e) {
+    if(!e || e.target===document.getElementById('modalOverlay'))
+      document.getElementById('modalOverlay').classList.remove('open');
+  }
+</script>
+{% endblock %}

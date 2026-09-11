@@ -1,0 +1,181 @@
+{% extends "student/base.html" %}
+{% block title %}My Fee — Student{% endblock %}
+{% block page_title %}My <span>Fee</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+  .fee-card{ background:var(--glass-card); backdrop-filter:var(--blur); border:1px solid var(--glass-border); border-radius:16px; padding:24px; margin-bottom:18px; }
+  .fee-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--glass-border); }
+  .fee-title{ font-family:'Oxanium',sans-serif; font-size:1rem; font-weight:700; }
+  .fee-row{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:.855rem; }
+  .fee-row:last-child{ border:none; }
+  .fee-row .label{ color:var(--muted); }
+  .fee-row .value{ font-weight:500; }
+  .total-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; margin-top:12px; background:rgba(0,212,170,.08); border:1px solid rgba(0,212,170,.2); border-radius:10px; }
+  .total-row .label{ font-family:'Oxanium',sans-serif; font-weight:700; }
+  .total-row .value{ font-family:'Oxanium',sans-serif; font-size:1.1rem; font-weight:800; color:var(--accent); }
+  .progress-bar{ height:8px; background:rgba(255,255,255,.08); border-radius:99px; overflow:hidden; margin-top:10px; }
+  .progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,var(--accent),#00b894); transition:width 1s ease; }
+  .status-paid    { background:rgba(0,212,170,.15); color:var(--accent);  border:1px solid rgba(0,212,170,.2); }
+  .status-partial { background:rgba(245,158,11,.15); color:var(--warn);   border:1px solid rgba(245,158,11,.2); }
+  .status-unpaid  { background:rgba(239,68,68,.15);  color:var(--danger); border:1px solid rgba(239,68,68,.2); }
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(6px); z-index:999; align-items:center; justify-content:center; }
+  .modal-overlay.open{ display:flex; }
+  .modal{ background:rgba(10,20,50,0.88); backdrop-filter:blur(24px); border:1px solid var(--glass-border); border-radius:18px; padding:28px; width:100%; max-width:480px; animation:fadeUp .3s ease; }
+  .modal-title{ font-family:'Oxanium',sans-serif; font-size:1.05rem; font-weight:700; margin-bottom:20px; }
+  .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fade-up">
+
+  {% if scholarship %}
+  <div style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.25);border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;">
+    <i class="fas fa-graduation-cap" style="color:var(--accent);font-size:1.2rem;"></i>
+    <div>
+      <div style="font-weight:700;font-size:.9rem;">Scholarship Applied</div>
+      {% for sc in scholarship %}
+      <div style="font-size:.78rem;color:var(--muted);">{{ sc.label }} —
+        {% if sc.discount_type == 'percent' %}{{ sc.discount_value }}% discount{% else %}Rs. {{ "{:,.0f}".format(sc.discount_value) }} waiver{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if fees %}
+    {% for fee in fees %}
+    {% set paid_pct = ((fee.paid_amount / fee.total_amount) * 100)|int if fee.total_amount > 0 else 0 %}
+
+    <div class="fee-card">
+      <div class="fee-header">
+        <div>
+          <div class="fee-title">Semester {{ fee.semester }} — Fee Voucher</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:3px;">
+            Academic Year: {{ fee.academic_year or '—' }}
+            {% if fee.due_date %} &nbsp;•&nbsp; Due: <span style="color:var(--warn);">{{ fee.due_date }}</span>{% endif %}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge status-{{ fee.status|lower }}" style="padding:5px 14px;font-size:.78rem;">{{ fee.status }}</span>
+          <a href="/student/fee/challan/{{ fee.id }}" class="btn btn-outline btn-sm" target="_blank">
+            <i class="fas fa-file-invoice"></i> Challan
+          </a>
+          {% if fee.status != 'Paid' %}
+          <button class="btn btn-primary btn-sm" onclick="openInstModal({{ fee.id }}, {{ fee.total_amount }})">
+            <i class="fas fa-layer-group"></i> Installment
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="fee-row"><span class="label">Credit Hours</span><span class="value">{{ fee.total_credit_hours }} hrs</span></div>
+      <div class="fee-row"><span class="label">Tuition Fee</span><span class="value">Rs. {{ "{:,.0f}".format(fee.tuition_fee) }}</span></div>
+      <div class="fee-row"><span class="label">Registration Fee</span><span class="value">Rs. {{ "{:,.0f}".format(fee.registration_fee) }}</span></div>
+      <div class="fee-row"><span class="label">Exam Fee</span><span class="value">Rs. {{ "{:,.0f}".format(fee.exam_fee) }}</span></div>
+      <div class="fee-row"><span class="label">Other Charges</span><span class="value">Rs. {{ "{:,.0f}".format(fee.other_charges) }}</span></div>
+      <div class="total-row"><span class="label">Total Amount</span><span class="value">Rs. {{ "{:,.0f}".format(fee.total_amount) }}</span></div>
+
+      <div style="margin-top:18px;">
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:6px;">
+          <span style="color:var(--muted);">Payment Progress</span>
+          <span style="color:var(--accent);font-weight:600;">{{ paid_pct }}% Paid</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:{{ paid_pct }}%;"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-top:8px;">
+          <span style="color:var(--accent);">Paid: Rs. {{ "{:,.0f}".format(fee.paid_amount) }}</span>
+          <span style="color:{% if fee.remaining_amount > 0 %}var(--danger){% else %}var(--accent){% endif %};">Remaining: Rs. {{ "{:,.0f}".format(fee.remaining_amount or 0) }}</span>
+        </div>
+      </div>
+
+      <!-- Installments for this fee -->
+      {% set fee_insts = installments | selectattr('student_fee_id','equalto', fee.id) | list %}
+      {% if fee_insts %}
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--glass-border);">
+        <div style="font-size:.78rem;font-weight:700;margin-bottom:10px;color:var(--muted);">Installment Plan</div>
+        {% for inst in fee_insts %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(0,0,0,.2);border-radius:8px;margin-bottom:6px;font-size:.82rem;">
+          <span>Installment {{ inst.installment_no }}</span>
+          <span style="font-weight:600;">Rs. {{ "{:,.0f}".format(inst.amount) }}</span>
+          <span style="color:var(--muted);">Due: {{ inst.due_date }}</span>
+          <span class="badge status-{{ inst.status|lower }}">{{ inst.status }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <!-- Payment History -->
+    {% if payments %}
+    <div class="card fade-up delay-1">
+      <div class="card-header">
+        <span class="card-title">Payment History</span>
+        <span style="font-size:.75rem;color:var(--muted);">{{ payments|length }} transactions</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Semester</th><th>Amount</th><th>Date</th><th>Method</th><th>Transaction ID</th></tr></thead>
+          <tbody>
+            {% for p in payments %}
+            <tr>
+              <td><span class="badge badge-blue">Sem {{ p.semester }}</span></td>
+              <td style="font-weight:600;color:var(--accent);">Rs. {{ "{:,.0f}".format(p.amount_paid) }}</td>
+              <td style="font-size:.82rem;">{{ p.payment_date }}</td>
+              <td><span class="badge badge-blue">{{ p.payment_method }}</span></td>
+              <td style="font-family:monospace;font-size:.78rem;color:var(--muted);">{{ p.transaction_id or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  {% else %}
+  <div class="card" style="text-align:center;padding:50px 20px;">
+    <div style="font-size:2.5rem;margin-bottom:16px;">💳</div>
+    <div style="font-family:'Oxanium',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:8px;">No Fee Generated Yet</div>
+    <div style="font-size:.855rem;color:var(--muted);">Admin ne abhi tak aapka fee voucher generate nahi kiya.<br>Please contact University Admin.</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- MODAL: Request Installment -->
+<div class="modal-overlay" id="instModal" onclick="closeInstModal(event)">
+  <div class="modal">
+    <div class="modal-title"><i class="fas fa-layer-group" style="color:var(--accent);margin-right:8px;"></i>Request Installment Plan</div>
+    <form method="POST" action="/student/fee/installment/request">
+      <input type="hidden" name="student_fee_id" id="instFeeId"/>
+      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:9px;padding:10px 14px;font-size:.8rem;color:var(--muted);margin-bottom:16px;">
+        <i class="fas fa-info-circle" style="color:var(--warn);"></i>
+        Aap sirf 2 installments mein fee pay kar sakte hain. Admin approve kare ga.
+      </div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:6px;">
+        Total: <strong id="instTotalDisplay" style="color:var(--accent);"></strong> — 2 equal installments mein taqseem hogi.
+      </div>
+      <div class="form-group"><label>Installment 1 — Due Date</label><input type="date" name="due_date_1" required/></div>
+      <div class="form-group"><label>Installment 2 — Due Date</label><input type="date" name="due_date_2" required/></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeInstModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function openInstModal(feeId, total) {
+    document.getElementById('instFeeId').value = feeId;
+    document.getElementById('instTotalDisplay').textContent = 'Rs. ' + total.toLocaleString();
+    document.getElementById('instModal').classList.add('open');
+  }
+  function closeInstModal(e) {
+    if(!e || e.target === document.getElementById('instModal'))
+      document.getElementById('instModal').classList.remove('open');
+  }
+</script>
+{% endblock %}
