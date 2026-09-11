@@ -97,16 +97,39 @@ source path/to/schema.sql
 ```
 Or open `schema.sql` in Workbench via **File → Open SQL Script** then press **Ctrl+Shift+Enter**
 
-### Step 4 — Configure Database Password
-Open `database.py` and update:
-```python
-DB_CONFIG = {
-    'host':     'localhost',
-    'user':     'root',
-    'password': 'YOUR_MYSQL_PASSWORD',  # ← change this
-    'database': 'edupredict',
-}
-```
+### Step 4 — Configure Database 
+   EduPredict uses MySQL for storing student, course, and enrollment data.
+   
+   1. Create your .env file
+   
+   Copy the .env.example file and rename the copy to .env.
+   
+   Windows:
+   
+   copy .env.example .env
+   
+   macOS / Linux:
+   
+   cp .env.example .env
+   2. Configure your MySQL credentials
+   
+   Open the newly created .env file and update the values according to your local MySQL setup:
+   
+   MYSQL_HOST=localhost
+   MYSQL_USER=root
+   MYSQL_PASSWORD=your_mysql_password
+   MYSQL_DATABASE=edupredict
+   MYSQL_PORT=3306
+   
+   Replace your_mysql_password with your actual MySQL password.
+   
+   3. Make sure the database exists
+   
+   Create a MySQL database named:
+   
+   edupredict
+   
+   Then run the provided database/schema setup if included in the project.
 
 
 ### Step 5 — Run the Application
